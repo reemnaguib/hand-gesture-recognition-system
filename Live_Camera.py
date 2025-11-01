@@ -3,8 +3,8 @@ import numpy as np
 import mediapipe as mp
 from tensorflow.keras.models import load_model
 from collections import deque, Counter
-import pyautogui  
-import time       
+import pyautogui
+import time
 
 # ---------------------------
 # Model Setup
@@ -35,19 +35,18 @@ if not cap.isOpened():
 
 PREDICTION_HISTORY_LEN = 5
 prediction_history = deque(maxlen=PREDICTION_HISTORY_LEN)
-STABILITY_THRESHOLD = 70.0  
+STABILITY_THRESHOLD = 70.0
 
 CLASSES = [
     '01_palm', '02_l', '03_fist', '04_fist_moved', '05_thumb',
     '06_index', '07_ok', '08_palm_moved', '09_c', '10_down'
 ]
-# '06_index' is at index 5 in the list above
+
 
 PADDING_FACTOR = 1.2
 
 # --- 2. ADD "COOLDOWN" FLAG ---
-action_triggered = False 
-# -----------------------------
+action_triggered = False
 
 print("Press 'q' to quit\n")
 
@@ -77,17 +76,17 @@ while True:
 
     result = hands.process(rgb_frame)
     current_label = ""
-    
+
     debug_stability = 0.0
     debug_box_msg = ""
-    
+
     hand_detected = False # To check if we should reset our trigger
 
     if result.multi_hand_landmarks:
         hand_detected = True # We see a hand
         for hand_landmarks in result.multi_hand_landmarks:
 
-            # --- Bounding box logic (unchanged) ---
+            # --- Bounding box logic ---
             x_coords = [lm.x for lm in hand_landmarks.landmark]
             y_coords = [lm.y for lm in hand_landmarks.landmark]
             x_min, x_max = min(x_coords), max(x_coords)
@@ -128,34 +127,87 @@ while True:
                 most_common_pred = Counter(prediction_history).most_common(1)[0]
                 most_common_index = most_common_pred[0]
                 stability_count = most_common_pred[1]
-                
+
                 stability = (stability_count / len(prediction_history)) * 100
                 debug_stability = stability
 
-                # --- 3. GESTURE-TO-ACTION LOGIC ---
+                # ----------------- INTUITIVE GESTURE-TO-ACTION LOGIC -----------------
                 if stability >= STABILITY_THRESHOLD:
                     current_label = CLASSES[most_common_index]
                     
-                    # Check if the gesture is '06_index' (which is at index 5)
-                    if most_common_index == 5:
-                        # If our action hasn't been triggered yet...
-                        if not action_triggered:
-                            print("ACTION: Taking Screenshot!")
-                            # Take and save the screenshot
+                    # Check if a stable gesture has been detected
+                    if not action_triggered:
+                        
+                        # --- Gesture 01_palm (Index 0): Show Desktop ---
+                        if most_common_index == 0:
+                            print("ACTION: Show Desktop/Minimize All 🖥️")
+                            pyautogui.hotkey('win', 'd') 
+                            action_triggered = True
+                            
+                        # --- Gesture 02_l (Index 1): Play/Pause ---
+                        elif most_common_index == 1:
+                            print("ACTION: Play/Pause ⏯️")
+                            pyautogui.press('playpause')
+                            action_triggered = True
+                            
+                        # --- Gesture 03_fist (Index 2): Mute/Unmute ---
+                        elif most_common_index == 2:
+                            print("ACTION: Mute/Unmute 🔇")
+                            pyautogui.press('volumemute')
+                            action_triggered = True
+                            
+                        # --- Gesture 04_fist_moved (Index 3): Next Track/Right Arrow ---
+                        elif most_common_index == 3:
+                            print("ACTION: Next Track ➡️")
+                            pyautogui.press('right')
+                            action_triggered = True
+                            
+                        # --- Gesture 05_thumb (Index 4): Volume Up ---
+                        elif most_common_index == 4:
+                            print("ACTION: Volume Up! 🔊")
+                            pyautogui.press('volumeup')
+                            action_triggered = True
+                            
+                        # --- Gesture 06_index (Index 5): Scroll Up (Page Up) ---
+                        elif most_common_index == 5:
+                            print("ACTION: Scroll Up ⬆️")
+                            pyautogui.scroll(10)
+                            action_triggered = True
+                            
+                        # --- Gesture 07_ok (Index 6): Enter/Select ---
+                        elif most_common_index == 6:
+                            print("ACTION: Enter/Select ⏎")
+                            pyautogui.press('enter')
+                            action_triggered = True
+                            
+                        # --- Gesture 08_palm_moved (Index 7): Previous Track/Left Arrow ---
+                        elif most_common_index == 7:
+                            print("ACTION: Previous Track ⬅️")
+                            pyautogui.press('left')
+                            action_triggered = True
+                            
+                        # --- Gesture 09_c (Index 8): Take Screenshot ---
+                        elif most_common_index == 8:
+                            print("ACTION: Taking Screenshot! 📸")
                             ss = pyautogui.screenshot()
                             ss_filename = f"screenshot_{int(time.time())}.png"
                             ss.save(ss_filename)
                             print(f"Saved as {ss_filename}")
-                            
-                            # Set the flag so we don't take 30 screenshots
                             action_triggered = True
-                    else:
-                        # If the gesture is NOT 'index', reset the flag
-                        action_triggered = False
+                            
+                        # --- Gesture 10_down (Index 9): Volume Down ---
+                        elif most_common_index == 9:
+                            print("ACTION: Volume Down 🔉")
+                            pyautogui.press('volumedown') 
+                            action_triggered = True
+                            
+                    # If action was already triggered, the flag prevents re-triggering.
+                    
                 else:
-                    # If unstable, reset the flag
+                    # If prediction is unstable, reset the flag
                     action_triggered = False
-                # ------------------------------------
+                # ----------------- END INTUITIVE GESTURE-TO-ACTION LOGIC -----------------
+
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
