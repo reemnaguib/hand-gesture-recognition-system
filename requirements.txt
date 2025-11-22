@@ -1,6 +1,6 @@
-streamlit
-opencv-python
-mediapipe
-numpy
-pyautogui
-tensorflow
+streamlit==1.24.1
+opencv-python==4.7.0.72
+mediapipe==0.10.21
+numpy==1.24.3
+pyautogui==0.9.55
+tensorflow==2.11.0
