@@ -17,7 +17,7 @@ st.write("This Streamlit app runs **your full real‑time gesture code** with no
 ##############################################
 # MODEL LOADING
 ##############################################
-MODEL_PATH = r"mobile_net(7epchs).keras"
+MODEL_PATH = r"C:\Users\Enter Computer\Desktop\Hand_Gesure\mobile_net(7epchs).keras"
 st.sidebar.subheader("Model Loading")
 st.sidebar.info(f"Loading model from:\n{MODEL_PATH}")
 
@@ -59,9 +59,9 @@ def preprocess_frame(frame):
     return np.expand_dims(resized, axis=0)
 
 ##############################################
-# START BUTTON
+# START BUTTON (Fixed)
 ##############################################
-run = st.toggle("▶️ Start Camera")
+run = st.checkbox("▶️ Start Camera")
 frame_window = st.image([])
 
 ##############################################
@@ -72,7 +72,7 @@ if run:
     if not cap.isOpened():
         st.error("❌ Cannot access camera")
     else:
-        st.success("Camera started. Press the toggle again to stop.")
+        st.success("Camera started. Uncheck the box to stop.")
 
     while run:
         ret, frame = cap.read()
@@ -137,7 +137,6 @@ if run:
                     if stability >= STABILITY_THRESHOLD:
                         current_label = CLASSES[most_common_index]
 
-                        
                         if not action_triggered:
                             if most_common_index == 0:
                                 pyautogui.hotkey('win', 'd')
@@ -178,4 +177,5 @@ if run:
         frame_window.image(frame, channels="BGR")
 
     cap.release()
+
 st.write("Camera stopped.")
