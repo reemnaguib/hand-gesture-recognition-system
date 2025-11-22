@@ -17,19 +17,13 @@ st.write("This Streamlit app runs **your full real‑time gesture code** with no
 ##############################################
 # MODEL LOADING
 ##############################################
-MODEL_PATH = r"best_resnet_BALANCED_FINAL.h5"
+MODEL_PATH = r"mobile_net(7epchs).keras"
 st.sidebar.subheader("Model Loading")
 st.sidebar.info(f"Loading model from:\n{MODEL_PATH}")
 
-# ✅ Load model with compile=False to fix old h5 issues
-try:
-    model = load_model(MODEL_PATH, compile=False)
-    st.sidebar.success("Model loaded successfully ✔️")
-    st.sidebar.write(f"Model input: **{model.input_shape}**")
-    print(model.input_shape)
-except Exception as e:
-    st.sidebar.error(f"Failed to load model: {e}")
-    st.stop()
+model = load_model(MODEL_PATH)
+st.sidebar.success("Model loaded successfully ✔️")
+st.sidebar.write(f"Model input: **{model.input_shape}**")
 
 ##############################################
 # INIT MEDIAPIPE
@@ -143,6 +137,7 @@ if run:
                     if stability >= STABILITY_THRESHOLD:
                         current_label = CLASSES[most_common_index]
 
+                        
                         if not action_triggered:
                             if most_common_index == 0:
                                 pyautogui.hotkey('win', 'd')
